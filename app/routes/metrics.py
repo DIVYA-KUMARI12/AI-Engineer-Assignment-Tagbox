@@ -1,42 +1,30 @@
-classification_metrics = {
-    "total_requests": 0,
-    "class_distribution": {
-        "toxic": 0,
-        "spam": 0,
-        "safe": 0
-    },
-    "latencies": []
-}
-
-feedback_metrics = {
-    "total_feedback": 0,
-    "correct_count": 0,
-    "incorrect_count": 0
-}
+from app import storage
 
 def update_classification_metrics(classification: str, latency_ms: float):
-    classification_metrics["total_requests"] += 1
-    if classification in classification_metrics["class_distribution"]:
-        classification_metrics["class_distribution"][classification] += 1
-    classification_metrics["latencies"].append(latency_ms)
+    storage.metrics_data["classification"]["total_requests"] += 1
+    if classification in storage.metrics_data["classification"]["class_distribution"]:
+        storage.metrics_data["classification"]["class_distribution"][classification] += 1
+    
+    # Track latencies for average calculation
+    storage.metrics_data["classification"].setdefault("latencies", []).append(latency_ms)
+    
+    # Update average latency
+    latencies = storage.metrics_data["classification"]["latencies"]
+    storage.metrics_data["classification"]["average_latency_ms"] = sum(latencies) / len(latencies)
 
 def update_feedback_metrics(predicted: str, correct: str):
-    feedback_metrics["total_feedback"] += 1
+    storage.metrics_data["feedback"]["total_feedback"] += 1
     if predicted == correct:
-        feedback_metrics["correct_count"] += 1
+        storage.metrics_data["feedback"]["correct_count"] += 1
     else:
-        feedback_metrics["incorrect_count"] += 1
+        storage.metrics_data["feedback"]["incorrect_count"] += 1
 
 def get_classification_metrics():
-    avg_latency = (
-        sum(classification_metrics["latencies"]) / len(classification_metrics["latencies"])
-        if classification_metrics["latencies"] else 0
-    )
     return {
-        "total_requests": classification_metrics["total_requests"],
-        "class_distribution": classification_metrics["class_distribution"],
-        "average_latency_ms": avg_latency
+        "total_requests": storage.metrics_data["classification"]["total_requests"],
+        "class_distribution": storage.metrics_data["classification"]["class_distribution"],
+        "average_latency_ms": storage.metrics_data["classification"].get("average_latency_ms", 0.0)
     }
 
 def get_feedback_metrics():
-    return feedback_metrics
+    return storage.metrics_data["feedback"]
