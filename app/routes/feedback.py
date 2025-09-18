@@ -1,28 +1,36 @@
 from fastapi import APIRouter
-from app.routes import metrics  # Use this name consistently
+from app import storage
 
 router = APIRouter()
-feedback_storage = []
 
 @router.post("/")
 def submit_feedback(data: dict):
-    """
-    Expected JSON:
-    {
-        "text": "I hate this product",
-        "predicted": "toxic",
-        "correct": "safe"
-    }
-    """
-    # Store feedback
-    feedback_storage.append(data)
-
-    # Update feedback metrics
+    text = data.get("text")
     predicted = data.get("predicted")
     correct = data.get("correct")
-    metrics.update_feedback_metrics(predicted, correct)
+    prompt_used = data.get("prompt_used", "baseline")  # optional field
+    
+    # Store feedback in memory
+    storage.metrics_data["feedback"]["total_feedback"] += 1
+    if predicted == correct:
+        storage.metrics_data["feedback"]["correct_count"] += 1
+    else:
+        storage.metrics_data["feedback"]["incorrect_count"] += 1
+
+    # Optional: store prompt usage in each feedback entry
+    storage.metrics_data.setdefault("feedback_entries", []).append({
+        "text": text,
+        "predicted": predicted,
+        "correct": correct,
+        "prompt_used": prompt_used
+    })
 
     return {
         "status": "received",
-        "data": data
+        "data": {
+            "text": text,
+            "predicted": predicted,
+            "correct": correct,
+            "prompt_used": prompt_used
+        }
     }
