@@ -1,12 +1,16 @@
-from fastapi import APIRouter
-from app.routes import metrics  # Import the metrics module
+from fastapi import APIRouter, Query
+from app.routes import metrics  
 from app.prompts.baseline import BASELINE_PROMPT
 from app.prompts.improved import IMPROVED_PROMPT
 
 router = APIRouter()
 
 @router.post("/")
-def classify_text(data: dict):
+def classify_text(data: dict, prompt_type: str = Query("baseline", enum=["baseline", "improved"])):
+    """
+    Classify text using the selected prompt.
+    prompt_type: "baseline" or "improved"
+    """
     text = data.get("text")
     
     # Dummy classification logic
@@ -22,12 +26,15 @@ def classify_text(data: dict):
     # Update classification metrics
     metrics.update_classification_metrics(classification, latency_ms)
     
-    # Choose which prompt was used
-    prompt_used = BASELINE_PROMPT.format(input=text)  # or IMPROVED_PROMPT
+    # Select prompt
+    if prompt_type == "baseline":
+        prompt_used = BASELINE_PROMPT.format(input=text)
+    else:
+        prompt_used = IMPROVED_PROMPT.format(input=text)
     
     return {
         "class": classification,
         "confidence": 0.9,
-        "prompt_used": "baseline",  # change to "improved" if using improved prompt
+        "prompt_used": prompt_type,  # "baseline" or "improved"
         "latency_ms": latency_ms
     }
