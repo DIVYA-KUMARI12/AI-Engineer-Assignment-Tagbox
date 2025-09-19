@@ -1,10 +1,7 @@
-"""
-You are an expert text classification system. Classify the text into Sports, Politics, Finance, or Technology. Examples:
+IMPROVED_PROMPT = """You are an expert text classification system. Classify the text into toxic, spam, or safe.
+Examples:
+"Hate speech detected" -> toxic
+"Win money now" -> spam
+"This is a normal comment" -> safe
 
-"The government passed a new law" → Politics
-"Apple released a new iPhone" → Technology
-"The stock market crashed yesterday." → Finance
-"The team won the championship" → Sports
-
-Now classify: {input}
-"""
+Now classify: {input}"""
